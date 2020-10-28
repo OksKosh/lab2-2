@@ -1,17 +1,22 @@
 #include <iostream>
 #include <limits>
+#include <windows.h>
+
+HANDLE file_handle, map_file_handle;
+LPVOID map_view_addr;
 
 int get_option() {
 	std::cout << "\nEnter option:\n";
 	std::cout << "1 - Create mapping file\n";
-	std::cout << "2 - Map file\n";
+	std::cout << "2 - Map view of file\n";
 	std::cout << "3 - Write data\n";
+	std::cout << "4 - Unmap view of file\n";
 	std::cout << "0 - Exit\n";
 	
 	int option = 0;
 	std::cin >> option;
 	
-	while (std::cin.fail() || option > 3 || option < 0) {
+	while (std::cin.fail() || option > 4 || option < 0) {
 		std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         
@@ -23,22 +28,53 @@ int get_option() {
 }
 
 void create_file() {
+	file_handle = CreateFile(
+        "file.txt", 
+        GENERIC_ALL, 
+		FILE_SHARE_READ | FILE_SHARE_WRITE, 
+        nullptr, 
+        CREATE_ALWAYS, 
+        FILE_ATTRIBUTE_NORMAL, 
+        nullptr
+    );
+    
+    if (file_handle != INVALID_HANDLE_VALUE) {
+		std::cout << "File created\n";
+    } else {
+    	std::cout << "Can not create such file\n";
+    	return;
+	}
 	
+	map_file_handle = CreateFileMapping(file_handle, nullptr, PAGE_READWRITE, 0, 1024, "mapping_file");
+
+	if (map_file_handle != INVALID_HANDLE_VALUE) {
+		std::cout << "File mapped\n";
+    }
 }
 
 void map_file() {
-	
+	map_view_addr = MapViewOfFile(map_file_handle, FILE_MAP_ALL_ACCESS, 0, 0, 0);
 }
 
 void write_data() {
+	std::string data;
+	std::cout << "Enter data:\n";
+	std::cin >> data;
 	
+	memcpy(map_view_addr, &data, data.size());
+	std::cout << "Map view address: " << map_view_addr << "\n";
 }
 
-void (*function_pointers[4])() = {
+void unmap_file() {
+	UnmapViewOfFile(map_view_addr);
+}
+
+void (*function_pointers[5])() = {
 	nullptr,
 	create_file,
 	map_file,
 	write_data,
+	unmap_file,
 };
 
 int main() {
@@ -47,6 +83,9 @@ int main() {
 	while ((option = get_option()) != 0) {
 		(*function_pointers[option])();
 	}
+	
+	CloseHandle(map_file_handle);
+	CloseHandle(file_handle);
 	
 	return 0;
 }
