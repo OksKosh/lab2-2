@@ -48,12 +48,19 @@ void create_file() {
 	map_file_handle = CreateFileMapping(file_handle, nullptr, PAGE_READWRITE, 0, 1024, "mapping_file");
 
 	if (map_file_handle != INVALID_HANDLE_VALUE) {
-		std::cout << "File mapped\n";
-    }
+		std::cout << "Mapping file created\n";
+    } else {
+    	std::cout << "Can not create mapping file\n";
+	}
 }
 
 void map_file() {
 	map_view_addr = MapViewOfFile(map_file_handle, FILE_MAP_ALL_ACCESS, 0, 0, 0);
+	if (map_view_addr == 0) {
+        std::cout << "Can not map view of file\n";
+	} else {
+		std::cout << "View of file mapped\n";
+	}
 }
 
 void write_data() {
@@ -62,11 +69,15 @@ void write_data() {
 	std::cin >> data;
 	
 	memcpy(map_view_addr, &data, data.size());
-	std::cout << "Map view address: " << map_view_addr << "\n";
+	std::cout << "Written to map view address " << map_view_addr << "\n";
 }
 
 void unmap_file() {
-	UnmapViewOfFile(map_view_addr);
+	if(UnmapViewOfFile(map_view_addr)) {
+		std::cout << "View of file unmapped\n";
+	} else {
+		std::cout << "Can not unmap view of file\n";
+	}	
 }
 
 void (*function_pointers[5])() = {
