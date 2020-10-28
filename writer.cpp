@@ -64,11 +64,11 @@ void map_file() {
 }
 
 void write_data() {
-	std::string data;
+	char data[1024];
 	std::cout << "Enter data:\n";
 	std::cin >> data;
 	
-	memcpy(map_view_addr, &data, data.size());
+	memcpy(map_view_addr, data, strlen(data));
 	std::cout << "Written to map view address " << map_view_addr << "\n";
 }
 
