@@ -66,9 +66,17 @@ void map_file() {
 void write_data() {
 	char data[1024];
 	std::cout << "Enter data:\n";
-	std::cin >> data;
+	std::cin.ignore();
+	int text_size = 0;
+	while (!std::cin.eof()) {
+	    std::cin >> std::noskipws >> data[text_size];
+	    if (data[text_size] == 10) {
+	    	break;
+		}
+	    text_size++;
+	}
 	
-	memcpy(map_view_addr, data, strlen(data));
+	memcpy(map_view_addr, data, text_size);
 	std::cout << "Written to map view address " << map_view_addr << "\n";
 }
 
